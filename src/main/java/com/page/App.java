@@ -1,20 +1,89 @@
 package com.page;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Scanner;
 
-import javax.lang.model.util.ElementScanner6;
-
-/**
- * Hello world!
- *
- */
 public class App 
 {
+    private static Scanner scanner = new Scanner(System.in);
+
+    private static void login(String role, Connect connect)
+    {
+        if(!role.equals(User.visitor))
+        {
+            if(role.equals(User.admin))
+                connect = new Connect(role, "11111111");
+            else
+                connect = new Connect(role, "22222222");
+        }
+
+        while(true)
+        {
+
+            System.out.println("1. Add Post");
+            System.out.println("2. Edit Post");
+            System.out.println("3. Delete Post");
+            System.out.println("4. View All Post");
+            System.out.println("5. Logout");
+
+            System.out.print(">> ");
+            int input = scanner.nextInt();
+            
+
+            if(input == 1)
+            {
+                System.out.print("Enter Post: ");
+                scanner.nextLine();
+                String content = scanner.nextLine();
+
+
+                try {
+                    Post.addPost(content, connect);
+                    System.out.println("Post Added!");
+                } catch (ClassNotFoundException | SQLException e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+            else if(input == 2)
+            {
+                System.out.println("edit post ....");
+            }
+            else if(input == 3)
+            {
+                System.out.println("delete post ....");
+            }
+            else if(input == 4)
+            {
+                try {
+                    ResultSet resultSet = Post.selectPost(connect);
+                    int count = 1;
+
+                    while (resultSet.next()) 
+                    {
+                        Post post = new Post(resultSet.getInt("post_id"), resultSet.getString("content"));
+                        System.out.println(count + " " + post.toString());
+                        count++;
+                    }
+
+                } catch (ClassNotFoundException | SQLException e) {
+                    System.err.println(e.getMessage());
+                }
+                
+            }
+            else
+            {
+                System.out.println("Logout!");
+                break;
+            }
+
+            scanner.nextLine();
+        }
+    }
     public static void main( String[] args ) throws ClassNotFoundException, SQLException
     {
         Connect defaultConnect = new Connect("visitor", "33333333");
-        Scanner scanner = new Scanner(System.in);
+        
 
         while (true) 
         {
@@ -35,9 +104,11 @@ public class App
                     System.out.print("Enter Password: ");
                     String password = scanner.next();
 
-                    if(User.userExist(username, password, defaultConnect))
+                    User user = User.getUser(username, password, defaultConnect);
+
+                    if(user != null)
                     {
-                        System.out.println("Logged In!");
+                        login(user.getRole() , defaultConnect);
                         break;
                     }
                     else
